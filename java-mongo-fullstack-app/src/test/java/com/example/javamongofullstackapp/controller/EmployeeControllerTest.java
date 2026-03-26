@@ -1,4 +1,4 @@
-package com.example.javamongofullstackapp.controller;
+package com.example.java_mongo_fullstack_app.controller;
 
 import com.example.java_mongo_fullstack_app.controller.EmployeeController;
 import com.example.java_mongo_fullstack_app.dto.EmployeeDto;
