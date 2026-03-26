@@ -1,8 +1,10 @@
-package com.example.javamongofullstackapp.service;
+package com.example.java_mongo_fullstack_app.service;
 
 import com.example.java_mongo_fullstack_app.dto.EmployeeDto;
 import com.example.java_mongo_fullstack_app.exception.ResourceNotFoundException;
 import com.example.java_mongo_fullstack_app.model.Employee;
+import com.example.java_mongo_fullstack_app.model.EmployeeStatus;
+import com.example.java_mongo_fullstack_app.model.EmploymentType;
 import com.example.java_mongo_fullstack_app.repository.EmployeeRepository;
 import com.example.java_mongo_fullstack_app.service.impl.EmployeeServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
@@ -12,6 +14,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
@@ -36,29 +39,40 @@ public class EmployeeServiceTest {
     void setUp() {
         employee = Employee.builder()
                 .id("1")
-                .name("John Doe")
-                .email("john@example.com")
+                .firstName("John")
+                .lastName("Doe")
+                .email("john.doe@example.com")
+                .phoneNumber("1234567890")
                 .department("IT")
+                .employmentType(EmploymentType.FULL_TIME)
+                .dateOfJoining(LocalDate.now())
+                .status(EmployeeStatus.ACTIVE)
                 .salary(50000.0)
                 .build();
 
         employeeDto = EmployeeDto.builder()
                 .id("1")
-                .name("John Doe")
-                .email("john@example.com")
+                .firstName("John")
+                .lastName("Doe")
+                .email("john.doe@example.com")
+                .phoneNumber("1234567890")
                 .department("IT")
+                .employmentType(EmploymentType.FULL_TIME)
+                .dateOfJoining(LocalDate.now())
+                .status(EmployeeStatus.ACTIVE)
                 .salary(50000.0)
                 .build();
     }
 
     @Test
     void createEmployee_ReturnsEmployeeDto() {
+        when(employeeRepository.findByEmail(anyString())).thenReturn(Optional.empty());
         when(employeeRepository.save(any(Employee.class))).thenReturn(employee);
 
         EmployeeDto savedEmployee = employeeService.createEmployee(employeeDto);
 
         assertNotNull(savedEmployee);
-        assertEquals(employeeDto.getName(), savedEmployee.getName());
+        assertEquals(employeeDto.getFirstName(), savedEmployee.getFirstName());
         verify(employeeRepository, times(1)).save(any(Employee.class));
     }
 
@@ -97,11 +111,11 @@ public class EmployeeServiceTest {
         when(employeeRepository.findById("1")).thenReturn(Optional.of(employee));
         when(employeeRepository.save(any(Employee.class))).thenReturn(employee);
 
-        employeeDto.setName("Jane Doe");
+        employeeDto.setFirstName("Jane");
         EmployeeDto updatedEmployee = employeeService.updateEmployee("1", employeeDto);
 
         assertNotNull(updatedEmployee);
-        assertEquals("Jane Doe", updatedEmployee.getName());
+        assertEquals("Jane", updatedEmployee.getFirstName());
         verify(employeeRepository, times(1)).findById("1");
         verify(employeeRepository, times(1)).save(any(Employee.class));
     }
