@@ -1,0 +1,36 @@
+spring:
+  application:
+    name: java-mongo-fullstack-app
+
+  data:
+    mongodb:
+      uri: mongodb://localhost:27017/employee_db
+
+server:
+  port: 8080
+
+logging:
+  level:
+    root: INFO
+
+    # 🔥 Your application logs (MOST IMPORTANT)
+    com.example.java_mongo_fullstack_app: DEBUG
+
+    # 🌱 Spring framework logs
+    org.springframework: INFO
+    org.springframework.web: DEBUG
+
+    # 🍃 MongoDB logs (queries + operations)
+    org.springframework.data.mongodb.core.MongoTemplate: DEBUG
+    org.springframework.data.mongodb.repository: DEBUG
+
+  # 📁 Log file configuration
+  file:
+    name: logs/application.log
+
+  pattern:
+    # 🖥️ Console log (clean + readable)
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+
+    # 📄 File log (detailed for debugging)
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
