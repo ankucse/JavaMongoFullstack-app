@@ -1,4 +1,4 @@
-package com.fullStackApp.java_mongo_fullstack_app;
+package com.example.java_mongo_fullstack_app;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
