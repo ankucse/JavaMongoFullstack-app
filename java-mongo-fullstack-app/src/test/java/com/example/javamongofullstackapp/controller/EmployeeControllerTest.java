@@ -1,6 +1,9 @@
-package com.example.java_mongo_fullstack_app.controller;
+package com.example.javamongofullstackapp.controller;
 
+import com.example.java_mongo_fullstack_app.controller.EmployeeController;
 import com.example.java_mongo_fullstack_app.dto.EmployeeDto;
+import com.example.java_mongo_fullstack_app.model.EmployeeStatus;
+import com.example.java_mongo_fullstack_app.model.EmploymentType;
 import com.example.java_mongo_fullstack_app.service.EmployeeService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
@@ -9,8 +12,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.List;
 
@@ -39,9 +44,14 @@ public class EmployeeControllerTest {
     void setUp() {
         employeeDto = EmployeeDto.builder()
                 .id("1")
-                .name("John Doe")
+                .firstName("John")
+                .lastName("Doe")
                 .email("john.doe@example.com")
+                .phoneNumber("1234567890")
                 .department("Engineering")
+                .employmentType(EmploymentType.FULL_TIME)
+                .dateOfJoining(LocalDate.now())
+                .status(EmployeeStatus.ACTIVE)
                 .salary(75000.0)
                 .build();
     }
@@ -54,7 +64,7 @@ public class EmployeeControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(employeeDto)))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.name").value("John Doe"))
+                .andExpect(jsonPath("$.firstName").value("John"))
                 .andExpect(jsonPath("$.email").value("john.doe@example.com"));
     }
 
@@ -66,7 +76,7 @@ public class EmployeeControllerTest {
         mockMvc.perform(get("/employees"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.size()").value(1))
-                .andExpect(jsonPath("$[0].name").value("John Doe"));
+                .andExpect(jsonPath("$[0].firstName").value("John"));
     }
 
     @Test
@@ -75,7 +85,7 @@ public class EmployeeControllerTest {
 
         mockMvc.perform(get("/employees/1"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.name").value("John Doe"))
+                .andExpect(jsonPath("$.firstName").value("John"))
                 .andExpect(jsonPath("$.department").value("Engineering"));
     }
 
@@ -83,9 +93,14 @@ public class EmployeeControllerTest {
     void testUpdateEmployee() throws Exception {
         EmployeeDto updatedDto = EmployeeDto.builder()
                 .id("1")
-                .name("Jane Doe")
+                .firstName("Jane")
+                .lastName("Doe")
                 .email("jane.doe@example.com")
+                .phoneNumber("1234567890")
                 .department("HR")
+                .employmentType(EmploymentType.FULL_TIME)
+                .dateOfJoining(LocalDate.now())
+                .status(EmployeeStatus.ACTIVE)
                 .salary(80000.0)
                 .build();
 
@@ -95,7 +110,7 @@ public class EmployeeControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(updatedDto)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.name").value("Jane Doe"))
+                .andExpect(jsonPath("$.firstName").value("Jane"))
                 .andExpect(jsonPath("$.department").value("HR"));
     }
 

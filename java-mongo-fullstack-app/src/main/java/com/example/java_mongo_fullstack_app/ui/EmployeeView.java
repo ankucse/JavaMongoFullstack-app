@@ -54,7 +54,7 @@ public class EmployeeView extends VerticalLayout {
     }
 
     private void configureGrid() {
-        grid.addColumn(EmployeeDto::getName).setHeader("Name");
+        grid.addColumn(emp -> emp.getFirstName() + " " + emp.getLastName()).setHeader("Name");
         grid.addColumn(EmployeeDto::getEmail).setHeader("Email");
         grid.addColumn(EmployeeDto::getDepartment).setHeader("Department");
         grid.addColumn(EmployeeDto::getSalary).setHeader("Salary");
@@ -90,14 +90,19 @@ public class EmployeeView extends VerticalLayout {
 
         Binder<EmployeeDto> binder = new Binder<>(EmployeeDto.class);
         
-        TextField nameField = new TextField("Name");
+        TextField firstNameField = new TextField("First Name");
+        TextField lastNameField = new TextField("Last Name");
         TextField emailField = new TextField("Email");
         TextField departmentField = new TextField("Department");
         NumberField salaryField = new NumberField("Salary");
 
-        binder.forField(nameField)
-                .asRequired("Name is required")
-                .bind(EmployeeDto::getName, EmployeeDto::setName);
+        binder.forField(firstNameField)
+                .asRequired("First name is required")
+                .bind(EmployeeDto::getFirstName, EmployeeDto::setFirstName);
+                
+        binder.forField(lastNameField)
+                .asRequired("Last name is required")
+                .bind(EmployeeDto::getLastName, EmployeeDto::setLastName);
                 
         binder.forField(emailField)
                 .asRequired("Email is required")
@@ -114,7 +119,7 @@ public class EmployeeView extends VerticalLayout {
         binder.readBean(employee);
 
         FormLayout formLayout = new FormLayout();
-        formLayout.add(nameField, emailField, departmentField, salaryField);
+        formLayout.add(firstNameField, lastNameField, emailField, departmentField, salaryField);
 
         Button saveBtn = new Button("Save", e -> {
             try {
