@@ -10,6 +10,9 @@ import com.example.java_mongo_fullstack_app.repository.EmployeeRepository;
 import com.example.java_mongo_fullstack_app.service.EmployeeService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -27,14 +30,13 @@ public class EmployeeServiceImpl implements EmployeeService {
     public EmployeeDto createEmployee(EmployeeDto employeeDto) {
         log.info("START: createEmployee - Request received: {}", employeeDto);
         try {
-            // Check for duplicate email
             Optional<Employee> existingEmployee = employeeRepository.findByEmail(employeeDto.getEmail());
             if (existingEmployee.isPresent()) {
                 log.warn("Validation failed: Email already exists - {}", employeeDto.getEmail());
                 throw new ValidationException("Email already exists");
             }
 
-            Employee employee = mapToEntity(employeeDto);
+            Employee employee = mapToModel(employeeDto);
             Employee savedEmployee = employeeRepository.save(employee);
             EmployeeDto savedEmployeeDto = mapToDto(savedEmployee);
             log.info("END: createEmployee - Response sent: {}", savedEmployeeDto);
@@ -88,7 +90,6 @@ public class EmployeeServiceImpl implements EmployeeService {
             Employee existingEmployee = employeeRepository.findById(id)
                     .orElseThrow(() -> new ResourceNotFoundException("Employee not found with id: " + id));
 
-            // Check if email is being changed to an existing one
             if (!existingEmployee.getEmail().equals(employeeDto.getEmail())) {
                 Optional<Employee> emailCheck = employeeRepository.findByEmail(employeeDto.getEmail());
                 if (emailCheck.isPresent()) {
@@ -97,7 +98,6 @@ public class EmployeeServiceImpl implements EmployeeService {
                 }
             }
 
-            // Update fields
             existingEmployee.setFirstName(employeeDto.getFirstName());
             existingEmployee.setLastName(employeeDto.getLastName());
             existingEmployee.setEmail(employeeDto.getEmail());
@@ -219,11 +219,68 @@ public class EmployeeServiceImpl implements EmployeeService {
         }
     }
 
-
-    private Employee mapToEntity(EmployeeDto dto) {
-        if (dto == null) {
-            return null;
+    @Override
+    public List<Employee> findAllEmployeeModels() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication != null && authentication.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"))) {
+            return employeeRepository.findAll();
+        } else if (authentication != null && authentication.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("ROLE_USER"))) {
+            String userEmail = authentication.getName();
+            return employeeRepository.findByEmail(userEmail).stream().toList();
         }
+        throw new AccessDeniedException("Access Denied: Not authenticated or authorized.");
+    }
+
+    @Override
+    public Optional<Employee> findEmployeeModelById(String id) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        Optional<Employee> employee = employeeRepository.findById(id);
+
+        if (employee.isPresent()) {
+            if (authentication != null && authentication.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"))) {
+                return employee;
+            } else if (authentication != null && authentication.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("ROLE_USER"))) {
+                String userEmail = authentication.getName();
+                if (employee.get().getEmail().equals(userEmail)) {
+                    return employee;
+                }
+            }
+        }
+        return Optional.empty();
+    }
+
+    @Override
+    public Employee saveEmployeeModel(Employee employee) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication != null && authentication.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"))) {
+            return employeeRepository.save(employee);
+        } else if (authentication != null && authentication.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("ROLE_USER"))) {
+            String userEmail = authentication.getName();
+            if (employee.getId() != null) {
+                Optional<Employee> existingEmployee = employeeRepository.findById(employee.getId());
+                if (existingEmployee.isPresent() && existingEmployee.get().getEmail().equals(userEmail)) {
+                    if (!employee.getEmail().equals(userEmail)) {
+                        throw new AccessDeniedException("Access Denied: User cannot change their email address.");
+                    }
+                    return employeeRepository.save(employee);
+                }
+            }
+            throw new AccessDeniedException("Access Denied: User cannot add new employees or modify others' records.");
+        }
+        throw new AccessDeniedException("Access Denied: Not authenticated or authorized.");
+    }
+
+    @Override
+    public Optional<Employee> findModelByEmail(String email) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication != null && authentication.getName().equals(email)) {
+            return employeeRepository.findByEmail(email);
+        }
+        throw new AccessDeniedException("Access Denied: Cannot retrieve employee data for another user.");
+    }
+
+    private Employee mapToModel(EmployeeDto dto) {
+        if (dto == null) return null;
         return Employee.builder()
                 .id(dto.getId())
                 .firstName(dto.getFirstName())
@@ -248,9 +305,7 @@ public class EmployeeServiceImpl implements EmployeeService {
     }
 
     private EmployeeDto mapToDto(Employee entity) {
-        if (entity == null) {
-            return null;
-        }
+        if (entity == null) return null;
         return EmployeeDto.builder()
                 .id(entity.getId())
                 .firstName(entity.getFirstName())

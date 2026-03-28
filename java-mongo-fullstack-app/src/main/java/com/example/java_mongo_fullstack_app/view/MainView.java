@@ -36,19 +36,20 @@ import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.data.value.ValueChangeMode;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.theme.lumo.LumoUtility;
-import org.springframework.web.client.HttpClientErrorException;
-import org.springframework.web.client.RestTemplate;
+import jakarta.annotation.security.RolesAllowed;
+import com.example.java_mongo_fullstack_app.service.EmployeeService;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
 @Route("")
+@RolesAllowed("ADMIN")
 public class MainView extends VerticalLayout {
 
-    private final RestTemplate restTemplate;
+    private final EmployeeService employeeService;
     private final Grid<EmployeeDto> grid = new Grid<>(EmployeeDto.class, false);
-    private final String API_URL = "http://localhost:8080/employees";
     private TextField searchField;
     private List<EmployeeDto> allEmployees;
 
@@ -64,8 +65,9 @@ public class MainView extends VerticalLayout {
     private Button onLeaveFilterButton;
     private Button inactiveFilterButton;
 
-    public MainView() {
-        this.restTemplate = new RestTemplate();
+    @Autowired
+    public MainView(EmployeeService employeeService) {
+        this.employeeService = employeeService;
         
         setSizeFull();
         setPadding(false);
@@ -374,9 +376,9 @@ public class MainView extends VerticalLayout {
 
     private void listEmployees() {
         try {
-            EmployeeDto[] employees = restTemplate.getForObject(API_URL, EmployeeDto[].class);
+            List<EmployeeDto> employees = employeeService.getAllEmployees();
             if (employees != null) {
-                allEmployees = Arrays.asList(employees);
+                allEmployees = employees;
                 applyFilters(null); // Apply initial filters (all employees)
                 updateKpiCards();
             }
@@ -475,18 +477,16 @@ public class MainView extends VerticalLayout {
             if (binder.writeBeanIfValid(employee)) {
                 try {
                     if (isNew) {
-                        restTemplate.postForObject(API_URL, employee, EmployeeDto.class);
+                        employeeService.createEmployee(employee);
                         showSuccess("Employee created successfully!");
                     } else {
-                        restTemplate.put(API_URL + "/" + employee.getId(), employee);
+                        employeeService.updateEmployee(employee.getId(), employee);
                         showSuccess("Employee updated successfully!");
                     }
                     dialog.close();
                     listEmployees(); // Refresh grid and KPIs
-                } catch (HttpClientErrorException ex) {
-                    showError("Validation Error: " + ex.getResponseBodyAsString());
                 } catch (Exception ex) {
-                    showError("Error saving employee.");
+                    showError("Error saving employee: " + ex.getMessage());
                 }
             } else {
                 showError("Please fill out all required fields correctly.");
@@ -537,7 +537,7 @@ public class MainView extends VerticalLayout {
         
         dialog.addConfirmListener(e -> {
             try {
-                restTemplate.delete(API_URL + "/" + employee.getId());
+                employeeService.deleteEmployee(employee.getId());
                 showSuccess("Employee deleted.");
                 listEmployees(); // Refresh grid and KPIs
             } catch (Exception ex) {

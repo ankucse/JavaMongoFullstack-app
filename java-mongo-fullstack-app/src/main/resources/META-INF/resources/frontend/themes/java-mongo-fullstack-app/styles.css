@@ -1,0 +1,70 @@
+@import url('./lumo-generated/all-styles.css');
+
+.login-view {
+    background: linear-gradient(45deg, #6a11cb 0%, #2575fc 100%); /* Soft gradient background */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh; /* Full viewport height */
+    width: 100vw; /* Full viewport width */
+    margin: 0;
+    padding: 0;
+}
+
+.login-card {
+    background-color: white;
+    border-radius: 16px; /* Rounded card */
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2); /* Enhanced shadow */
+    padding: 2rem;
+    max-width: 400px;
+    width: 90%; /* Responsive width */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem; /* Space between elements */
+}
+
+.login-card h1 {
+    color: #333;
+    margin-bottom: 1rem;
+}
+
+.login-card vaadin-text-field,
+.login-card vaadin-password-field,
+.login-card vaadin-button {
+    width: 100%;
+}
+
+.login-card vaadin-button[theme~="tertiary"] {
+    color: var(--lumo-primary-text-color);
+    border: 1px solid var(--lumo-contrast-20pct);
+    background-color: var(--lumo-contrast-5pct);
+}
+
+.login-card vaadin-button[theme~="tertiary"]:hover {
+    background-color: var(--lumo-contrast-10pct);
+}
+
+/* Specific styles for Google/GitHub buttons if needed */
+.login-card vaadin-button[theme~="tertiary"][style*="color: rgb(66, 133, 244)"] { /* Google blue */
+    border-color: #4285F4;
+}
+.login-card vaadin-button[theme~="tertiary"][style*="color: rgb(51, 51, 51)"] { /* GitHub dark */
+    border-color: #333;
+}
+
+.login-card a {
+    font-size: var(--lumo-font-size-s);
+    color: var(--lumo-primary-text-color);
+    text-decoration: none;
+    margin-top: 0.5rem;
+}
+
+.login-card a:hover {
+    text-decoration: underline;
+}
+
+.login-card .vaadin-text-field-container,
+.login-card .vaadin-password-field-container {
+    width: 100%;
+}
