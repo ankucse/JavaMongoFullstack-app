@@ -31,7 +31,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @WebMvcTest(EmployeeController.class)
 @AutoConfigureMockMvc(addFilters = false)
 @ContextConfiguration(classes = JavaMongoFullstackAppApplication.class)
-public class EmployeeControllerTest {
+class EmployeeControllerTest {
 
     @Autowired
     private MockMvc mockMvc;
@@ -65,8 +65,8 @@ public class EmployeeControllerTest {
         when(employeeService.createEmployee(any(EmployeeDto.class))).thenReturn(employeeDto);
 
         mockMvc.perform(post("/employees")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(employeeDto)))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(employeeDto)))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.firstName").value("John"))
                 .andExpect(jsonPath("$.email").value("john.doe@example.com"));
@@ -111,8 +111,8 @@ public class EmployeeControllerTest {
         when(employeeService.updateEmployee(anyString(), any(EmployeeDto.class))).thenReturn(updatedDto);
 
         mockMvc.perform(put("/employees/1")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(updatedDto)))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(updatedDto)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.firstName").value("Jane"))
                 .andExpect(jsonPath("$.department").value("HR"));
