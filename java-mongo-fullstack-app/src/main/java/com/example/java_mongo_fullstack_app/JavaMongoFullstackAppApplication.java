@@ -2,6 +2,7 @@ package com.example.java_mongo_fullstack_app;
 
 import com.example.java_mongo_fullstack_app.entity.User;
 import com.example.java_mongo_fullstack_app.repository.UserRepository;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import com.example.java_mongo_fullstack_app.service.AuthService;
 import com.example.java_mongo_fullstack_app.service.EmployeeService;
 import com.example.java_mongo_fullstack_app.model.Employee;
@@ -26,6 +27,7 @@ public class JavaMongoFullstackAppApplication implements AppShellConfigurator {
     }
 
     @Bean
+    @ConditionalOnBean(UserRepository.class)
     public CommandLineRunner createInitialUsers(UserRepository userRepository, PasswordEncoder passwordEncoder, AuthService authService, EmployeeService employeeService) {
         return args -> {
             if (userRepository.count() == 0) {
