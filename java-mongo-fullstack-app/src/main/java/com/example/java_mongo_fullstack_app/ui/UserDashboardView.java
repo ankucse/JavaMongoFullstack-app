@@ -6,6 +6,7 @@ import com.example.java_mongo_fullstack_app.model.EmploymentType;
 import com.example.java_mongo_fullstack_app.service.EmployeeService;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.Component;
+import com.vaadin.flow.component.Html;
 import com.vaadin.flow.component.avatar.Avatar;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
@@ -55,6 +56,8 @@ public class UserDashboardView extends VerticalLayout implements BeforeEnterObse
     private Employee currentEmployee;
     private final Binder<Employee> binder = new BeanValidationBinder<>(Employee.class);
 
+    private int animationDelayCounter = 1;
+
     private TextField firstName = new TextField("First Name");
     private TextField lastName = new TextField("Last Name");
     private EmailField email = new EmailField("Email");
@@ -82,7 +85,46 @@ public class UserDashboardView extends VerticalLayout implements BeforeEnterObse
         setPadding(false);
         setMargin(false);
         setAlignItems(Alignment.CENTER);
-        getStyle().set("background", "linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)"); // Premium soft background
+        
+        // Unicorn SaaS Background
+        getStyle().set("background", "linear-gradient(135deg, #e0c3fc 0%, #8ec5fc 100%)");
+        getStyle().set("background-attachment", "fixed");
+        getStyle().set("overflow-x", "hidden");
+
+        // Inject Custom Premium SaaS CSS
+        add(new Html(
+            "<style>" +
+            "@keyframes fadeInUp {" +
+            "    from { opacity: 0; transform: translate3d(0, 30px, 0); }" +
+            "    to { opacity: 1; transform: translate3d(0, 0, 0); }" +
+            "}" +
+            ".unicorn-card {" +
+            "    background: rgba(255, 255, 255, 0.85) !important;" +
+            "    backdrop-filter: blur(12px);" +
+            "    -webkit-backdrop-filter: blur(12px);" +
+            "    border: 1px solid rgba(255, 255, 255, 0.6);" +
+            "    border-radius: 24px !important;" +
+            "    box-shadow: 0 8px 32px rgba(31, 38, 135, 0.08) !important;" +
+            "    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) !important;" +
+            "    opacity: 0;" +
+            "    animation: fadeInUp 0.7s ease-out forwards;" +
+            "}" +
+            ".unicorn-card:hover {" +
+            "    transform: translateY(-6px);" +
+            "    box-shadow: 0 15px 40px rgba(31, 38, 135, 0.15) !important;" +
+            "}" +
+            ".unicorn-btn {" +
+            "    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;" +
+            "    border-radius: 50px !important;" +
+            "    box-shadow: 0 4px 15px rgba(118, 75, 162, 0.4) !important;" +
+            "    transition: all 0.3s ease !important;" +
+            "}" +
+            ".unicorn-btn:hover {" +
+            "    transform: scale(1.05) translateY(-2px);" +
+            "    box-shadow: 0 8px 25px rgba(118, 75, 162, 0.6) !important;" +
+            "}" +
+            "</style>"
+        ));
     }
 
     @Override
@@ -146,11 +188,11 @@ public class UserDashboardView extends VerticalLayout implements BeforeEnterObse
 
         mainContainer.add(
             createHeaderCard(), 
-            createSectionCard("Personal Information", firstName, lastName, email, phoneNumber),
-            createSectionCard("Job Details", department, designation, role, employmentType, dateOfJoining, experienceYears),
-            createSectionCard("Compensation", salary, bonus, currency),
-            createSectionCard("Work Details", managerName, workLocation, status),
-            createSectionCard("Additional Notes", notes),
+            createSectionCard("Personal Information", VaadinIcon.USER, firstName, lastName, email, phoneNumber),
+            createSectionCard("Job Details", VaadinIcon.BRIEFCASE, department, designation, role, employmentType, dateOfJoining, experienceYears),
+            createSectionCard("Compensation", VaadinIcon.MONEY, salary, bonus, currency),
+            createSectionCard("Work Details", VaadinIcon.BUILDING, managerName, workLocation, status),
+            createSectionCard("Additional Notes", VaadinIcon.NOTEBOOK, notes),
             createActionCard()
         );
         add(mainContainer);
@@ -163,17 +205,40 @@ public class UserDashboardView extends VerticalLayout implements BeforeEnterObse
         layout.setWidthFull();
 
         Avatar avatar = new Avatar(currentEmployee.getFirstName() + " " + currentEmployee.getLastName());
-        avatar.getStyle().set("width", "80px").set("height", "80px").set("font-size", "30px");
+        avatar.getStyle().set("width", "90px").set("height", "90px").set("font-size", "35px");
+        avatar.getStyle().set("border", "4px solid white");
+        avatar.getStyle().set("box-shadow", "0 4px 10px rgba(0,0,0,0.1)");
         avatar.setColorIndex(currentEmployee.getFirstName() != null ? currentEmployee.getFirstName().length() % 7 : 0);
 
         VerticalLayout info = new VerticalLayout();
         info.setPadding(false);
         info.setSpacing(false);
+        info.setJustifyContentMode(FlexComponent.JustifyContentMode.CENTER);
+        
         H2 name = new H2((currentEmployee.getFirstName() != null ? currentEmployee.getFirstName() : "") + " " + (currentEmployee.getLastName() != null ? currentEmployee.getLastName() : ""));
-        name.getStyle().set("margin", "0");
+        name.getStyle().set("margin", "0").set("background", "-webkit-linear-gradient(45deg, #3b82f6, #8b5cf6)");
+        name.getStyle().set("-webkit-background-clip", "text");
+        name.getStyle().set("-webkit-text-fill-color", "transparent");
+        name.getStyle().set("font-weight", "800");
+        
         Span emailSpan = new Span(currentEmployee.getEmail());
         emailSpan.addClassNames(LumoUtility.TextColor.SECONDARY);
-        info.add(name, emailSpan);
+        emailSpan.getStyle().set("font-size", "15px").set("font-weight", "500");
+        
+        EmployeeStatus empStatus = currentEmployee.getStatus() != null ? currentEmployee.getStatus() : EmployeeStatus.ACTIVE;
+        Span statusBadge = new Span(empStatus.name().replace("_", " "));
+        statusBadge.getElement().getThemeList().add("badge");
+        statusBadge.getStyle().set("margin-top", "8px").set("border-radius", "10px").set("padding", "4px 12px").set("font-weight", "bold").set("font-size", "12px");
+        
+        if (empStatus == EmployeeStatus.ACTIVE) {
+            statusBadge.getStyle().set("background-color", "#dcfce7").set("color", "#166534"); // Green
+        } else if (empStatus == EmployeeStatus.INACTIVE) {
+            statusBadge.getStyle().set("background-color", "#fee2e2").set("color", "#991b1b"); // Red
+        } else if (empStatus == EmployeeStatus.ON_LEAVE) {
+            statusBadge.getStyle().set("background-color", "#fef08a").set("color", "#854d0e"); // Yellow
+        }
+        
+        info.add(name, emailSpan, statusBadge);
 
         Button logoutBtn = new Button("Logout", new Icon(VaadinIcon.SIGN_OUT));
         logoutBtn.addThemeVariants(ButtonVariant.LUMO_ERROR, ButtonVariant.LUMO_TERTIARY);
@@ -191,10 +256,20 @@ public class UserDashboardView extends VerticalLayout implements BeforeEnterObse
         return card;
     }
 
-    private Div createSectionCard(String title, Component... fields) {
+    private Div createSectionCard(String title, VaadinIcon icon, Component... fields) {
         Div card = createCard();
+        
+        HorizontalLayout headerLayout = new HorizontalLayout();
+        headerLayout.setAlignItems(Alignment.CENTER);
+        headerLayout.getStyle().set("margin-bottom", "20px");
+        
+        Icon sectionIcon = icon.create();
+        sectionIcon.getStyle().set("color", "#667eea").set("padding", "8px").set("background", "rgba(102, 126, 234, 0.1)").set("border-radius", "12px");
+        
         H4 header = new H4(title);
-        header.getStyle().set("margin-top", "0");
+        header.getStyle().set("margin", "0").set("color", "#2d3748").set("font-weight", "700");
+        
+        headerLayout.add(sectionIcon, header);
 
         FormLayout form = new FormLayout(fields);
         form.setResponsiveSteps(new FormLayout.ResponsiveStep("0", 1), new FormLayout.ResponsiveStep("500px", 2));
@@ -204,15 +279,19 @@ public class UserDashboardView extends VerticalLayout implements BeforeEnterObse
             if (field instanceof TextArea) {
                 form.setColspan(field, 2);
             }
+            // Soften field inputs for premium feel
+            field.getElement().getStyle().set("--lumo-contrast-10pct", "rgba(226, 232, 240, 0.6)");
+            field.getElement().getStyle().set("--lumo-border-radius-m", "10px");
         }
 
-        card.add(header, form);
+        card.add(headerLayout, form);
         return card;
     }
 
     private Div createActionCard() {
         Div card = createCard();
         card.getStyle().set("background", "transparent").set("box-shadow", "none").set("padding-top", "0");
+        card.getStyle().set("border", "none");
         
         HorizontalLayout layout = new HorizontalLayout();
         layout.setWidthFull();
@@ -220,6 +299,7 @@ public class UserDashboardView extends VerticalLayout implements BeforeEnterObse
 
         Button updateBtn = new Button("Update Profile", new Icon(VaadinIcon.CHECK));
         updateBtn.addThemeVariants(ButtonVariant.LUMO_PRIMARY, ButtonVariant.LUMO_LARGE);
+        updateBtn.addClassName("unicorn-btn");
         updateBtn.addClickListener(e -> updateProfile());
 
         layout.add(updateBtn);
@@ -229,8 +309,12 @@ public class UserDashboardView extends VerticalLayout implements BeforeEnterObse
 
     private Div createCard() {
         Div card = new Div();
-        card.addClassNames(LumoUtility.Background.BASE, LumoUtility.BorderRadius.LARGE, LumoUtility.BoxShadow.SMALL, LumoUtility.Padding.LARGE, LumoUtility.Margin.Bottom.MEDIUM);
+        card.addClassNames("unicorn-card", LumoUtility.Padding.LARGE, LumoUtility.Margin.Bottom.MEDIUM);
         card.setWidthFull();
+        
+        // Stagger the animation delay for a cascading load effect
+        card.getStyle().set("animation-delay", (0.1 * animationDelayCounter++) + "s");
+        
         return card;
     }
 

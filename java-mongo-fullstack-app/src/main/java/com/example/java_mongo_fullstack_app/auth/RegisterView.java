@@ -7,8 +7,10 @@ import com.example.java_mongo_fullstack_app.service.EmployeeService;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
+import com.vaadin.flow.component.Html;
 import com.vaadin.flow.component.html.Anchor;
 import com.vaadin.flow.component.html.H1;
+import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.notification.NotificationVariant;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
@@ -44,43 +46,72 @@ public class RegisterView extends VerticalLayout {
         setSizeFull();
         setAlignItems(FlexComponent.Alignment.CENTER);
         setJustifyContentMode(FlexComponent.JustifyContentMode.CENTER);
-        getStyle().set("background", "linear-gradient(45deg, #6a11cb 0%, #2575fc 100%)");
+        
+        // Unicorn SaaS Animated Background
+        getStyle().set("background", "linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab)");
+        getStyle().set("background-size", "400% 400%");
+        getStyle().set("animation", "dynamicBG 15s ease infinite");
+
+        // Inject Custom Premium SaaS CSS
+        add(new Html(
+            "<style>" +
+            "@keyframes dynamicBG { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }" +
+            "@keyframes fadeInUp { from { opacity: 0; transform: translate3d(0, 40px, 0); } to { opacity: 1; transform: translate3d(0, 0, 0); } }" +
+            ".unicorn-register-card { background: rgba(255, 255, 255, 0.85) !important; backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.7); border-radius: 24px !important; box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1) !important; animation: fadeInUp 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }" +
+            ".unicorn-primary-btn { background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%) !important; color: white !important; border-radius: 12px !important; box-shadow: 0 4px 15px rgba(37, 117, 252, 0.4) !important; transition: all 0.3s ease !important; height: 48px; font-weight: 600; font-size: 16px; margin-top: 10px !important; }" +
+            ".unicorn-primary-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(37, 117, 252, 0.6) !important; }" +
+            ".unicorn-input { --lumo-contrast-10pct: rgba(226, 232, 240, 0.7); --lumo-border-radius-m: 12px; }" +
+            ".unicorn-link { color: #6a11cb !important; font-weight: 600; text-decoration: none !important; transition: opacity 0.2s; font-size: 14px; }" +
+            ".unicorn-link:hover { opacity: 0.8; text-decoration: underline !important; }" +
+            "</style>"
+        ));
 
         VerticalLayout card = new VerticalLayout();
-        card.setPadding(true);
+        card.addClassName("unicorn-register-card");
+        card.getStyle().set("padding", "40px");
         card.setSpacing(true);
         card.setAlignItems(FlexComponent.Alignment.CENTER);
-        card.getStyle()
-                .set("background-color", "white")
-                .set("border-radius", "16px")
-                .set("box-shadow", "0 4px 20px rgba(0, 0, 0, 0.1)");
-        card.setMaxWidth("400px");
+        card.setMaxWidth("450px");
         card.setWidth("100%");
 
         H1 title = new H1("Create Account");
-        title.getStyle().set("color", "#333");
+        title.getStyle().set("margin", "0").set("background", "-webkit-linear-gradient(45deg, #6a11cb, #2575fc)");
+        title.getStyle().set("-webkit-background-clip", "text");
+        title.getStyle().set("-webkit-text-fill-color", "transparent");
+        title.getStyle().set("font-weight", "800");
+        title.getStyle().set("font-size", "2rem");
+
+        Span subtitle = new Span("Join us and start managing your profile");
+        subtitle.getStyle().set("color", "#64748b").set("font-size", "15px").set("margin-bottom", "15px");
 
         nameField.setWidthFull();
         nameField.setRequiredIndicatorVisible(true);
+        nameField.addClassName("unicorn-input");
+        nameField.setPlaceholder("John Doe");
         
         emailField.setWidthFull();
         emailField.setRequiredIndicatorVisible(true);
+        emailField.addClassName("unicorn-input");
+        emailField.setPlaceholder("your@example.com");
         
         passwordField.setWidthFull();
         passwordField.setRequiredIndicatorVisible(true);
+        passwordField.addClassName("unicorn-input");
+        passwordField.setPlaceholder("Create a secure password");
         
         confirmPasswordField.setWidthFull();
         confirmPasswordField.setRequiredIndicatorVisible(true);
+        confirmPasswordField.addClassName("unicorn-input");
+        confirmPasswordField.setPlaceholder("Repeat password");
 
         Button registerBtn = new Button("Sign Up", e -> attemptRegistration());
-        registerBtn.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+        registerBtn.addClassName("unicorn-primary-btn");
         registerBtn.setWidthFull();
 
         Anchor loginLink = new Anchor("/login", "Already have an account? Login here");
-        loginLink.getStyle().set("font-size", "var(--lumo-font-size-s)");
-        loginLink.getStyle().set("text-decoration", "none");
+        loginLink.addClassName("unicorn-link");
 
-        card.add(title, nameField, emailField, passwordField, confirmPasswordField, registerBtn, loginLink);
+        card.add(title, subtitle, nameField, emailField, passwordField, confirmPasswordField, registerBtn, loginLink);
         add(card);
     }
 
