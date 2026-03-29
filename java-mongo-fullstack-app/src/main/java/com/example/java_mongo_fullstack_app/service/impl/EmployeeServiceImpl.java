@@ -252,28 +252,28 @@ public class EmployeeServiceImpl implements EmployeeService {
     @Override
     public Employee saveEmployeeModel(Employee employee) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication != null && authentication.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"))) {
-            return employeeRepository.save(employee);
-        } else if (authentication != null && authentication.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("ROLE_USER"))) {
-            String userEmail = authentication.getName();
-            if (employee.getId() != null) {
-                Optional<Employee> existingEmployee = employeeRepository.findById(employee.getId());
-                if (existingEmployee.isPresent() && existingEmployee.get().getEmail().equals(userEmail)) {
-                    if (!employee.getEmail().equals(userEmail)) {
-                        throw new AccessDeniedException("Access Denied: User cannot change their email address.");
-                    }
-                    return employeeRepository.save(employee);
-                }
-            }
-            throw new AccessDeniedException("Access Denied: User cannot add new employees or modify others' records.");
+        
+        if (authentication == null || !authentication.isAuthenticated()) {
+            throw new AccessDeniedException("Access Denied: Not authenticated.");
         }
-        throw new AccessDeniedException("Access Denied: Not authenticated or authorized.");
+
+        boolean isAdmin = authentication.getAuthorities().stream().anyMatch(a -> a.getAuthority().contains("ADMIN"));
+        String currentUserEmail = authentication.getName();
+
+        // SaaS Onboarding Rule: Users can create/update data ONLY if the email matches their secure session identity.
+        if (!isAdmin && !currentUserEmail.equalsIgnoreCase(employee.getEmail())) {
+            throw new AccessDeniedException("Access Denied: You can only create or update your own profile.");
+        }
+
+        return employeeRepository.save(employee);
     }
 
     @Override
     public Optional<Employee> findModelByEmail(String email) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication != null && authentication.getName().equals(email)) {
+        
+        // Admins can search anyone's profile. Users can only search their own profile.
+        if (authentication != null && (authentication.getName().equalsIgnoreCase(email) || authentication.getAuthorities().stream().anyMatch(a -> a.getAuthority().contains("ADMIN")))) {
             return employeeRepository.findByEmail(email);
         }
         throw new AccessDeniedException("Access Denied: Cannot retrieve employee data for another user.");
