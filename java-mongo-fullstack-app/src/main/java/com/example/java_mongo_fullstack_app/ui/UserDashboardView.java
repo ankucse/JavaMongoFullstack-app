@@ -1,183 +1,257 @@
 package com.example.java_mongo_fullstack_app.ui;
 
+import com.example.java_mongo_fullstack_app.model.Employee;
+import com.example.java_mongo_fullstack_app.model.EmployeeStatus;
+import com.example.java_mongo_fullstack_app.model.EmploymentType;
 import com.example.java_mongo_fullstack_app.service.EmployeeService;
+import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.Component;
+import com.vaadin.flow.component.avatar.Avatar;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
+import com.vaadin.flow.component.combobox.ComboBox;
+import com.vaadin.flow.component.datepicker.DatePicker;
 import com.vaadin.flow.component.formlayout.FormLayout;
-import com.vaadin.flow.component.grid.Grid;
+import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.H2;
+import com.vaadin.flow.component.html.H4;
+import com.vaadin.flow.component.html.Span;
+import com.vaadin.flow.component.icon.Icon;
+import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.notification.NotificationVariant;
+import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.EmailField;
+import com.vaadin.flow.component.textfield.IntegerField;
+import com.vaadin.flow.component.textfield.NumberField;
+import com.vaadin.flow.component.textfield.TextArea;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.binder.BeanValidationBinder;
 import com.vaadin.flow.data.binder.Binder;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
+import com.vaadin.flow.theme.lumo.LumoUtility;
 import jakarta.annotation.security.PermitAll;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import com.vaadin.flow.router.BeforeEnterEvent;
+import com.vaadin.flow.router.BeforeEnterObserver;
 
-import java.util.Collections;
+import java.util.Arrays;
 import java.util.Optional;
 
 @Route("user-dashboard")
-@PageTitle("User Dashboard | Fullstack App")
-@PermitAll // This view is accessible to authenticated users (both ADMIN and USER, but logic restricts USER)
-public class UserDashboardView extends VerticalLayout {
+@PageTitle("My Profile | Fullstack App")
+@PermitAll
+public class UserDashboardView extends VerticalLayout implements BeforeEnterObserver {
+
+    private static final Logger logger = LoggerFactory.getLogger(UserDashboardView.class);
 
     private final EmployeeService employeeService;
+    private Employee currentEmployee;
+    private final Binder<Employee> binder = new BeanValidationBinder<>(Employee.class);
 
-    private Grid<com.example.java_mongo_fullstack_app.model.Employee> grid = new Grid<>(com.example.java_mongo_fullstack_app.model.Employee.class);
-    private TextField firstName = new TextField("First name");
-    private TextField lastName = new TextField("Last name");
+    private TextField firstName = new TextField("First Name");
+    private TextField lastName = new TextField("Last Name");
     private EmailField email = new EmailField("Email");
+    private TextField phoneNumber = new TextField("Phone Number");
+    
     private TextField department = new TextField("Department");
-
-    private Button saveButton = new Button("Save");
-    private Button cancelButton = new Button("Cancel");
-    private Button deleteButton = new Button("Delete");
-    private Button addEmployeeButton = new Button("Add Employee"); // This will be disabled/hidden
-
-    private Binder<com.example.java_mongo_fullstack_app.model.Employee> binder = new BeanValidationBinder<>(com.example.java_mongo_fullstack_app.model.Employee.class);
-    private com.example.java_mongo_fullstack_app.model.Employee currentEmployee;
+    private TextField designation = new TextField("Designation");
+    private TextField role = new TextField("Role");
+    private ComboBox<EmploymentType> employmentType = new ComboBox<>("Employment Type", EmploymentType.values());
+    private DatePicker dateOfJoining = new DatePicker("Date of Joining");
+    private IntegerField experienceYears = new IntegerField("Experience (Years)");
+    
+    private NumberField salary = new NumberField("Salary");
+    private NumberField bonus = new NumberField("Bonus");
+    private TextField currency = new TextField("Currency");
+    
+    private TextField managerName = new TextField("Manager Name");
+    private TextField workLocation = new TextField("Work Location");
+    private ComboBox<EmployeeStatus> status = new ComboBox<>("Working Status", EmployeeStatus.values());
+    private TextArea notes = new TextArea("Notes");
 
     public UserDashboardView(EmployeeService employeeService) {
         this.employeeService = employeeService;
-        addClassName("user-dashboard-view");
         setSizeFull();
-        configureGrid();
-        configureForm();
-
-        add(
-                new H2("Your Employee Information"),
-                getToolbar(),
-                getContent()
-        );
-
-        updateList();
-        closeEditor();
+        setPadding(false);
+        setMargin(false);
+        setAlignItems(Alignment.CENTER);
+        getStyle().set("background", "linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)"); // Premium soft background
     }
 
-    private Component getContent() {
-        HorizontalLayout content = new HorizontalLayout(grid, getForm());
-        content.setFlexGrow(2, grid);
-        content.setFlexGrow(1, getForm());
-        content.setSizeFull();
-        return content;
-    }
-
-    private void configureGrid() {
-        grid.addClassNames("employee-grid");
-        grid.setSizeFull();
-        grid.setColumns("firstName", "lastName", "email", "department");
-        grid.getColumns().forEach(col -> col.setAutoWidth(true));
-
-        grid.asSingleSelect().addValueChangeListener(event -> editEmployee(event.getValue()));
-    }
-
-    private Component getForm() {
-        FormLayout formLayout = new FormLayout();
-        binder.bindInstanceFields(this);
-
-        email.setReadOnly(true); // Email should not be editable by user to prevent changing identity
-
-        formLayout.add(firstName, lastName, email, department);
-
-        HorizontalLayout buttons = new HorizontalLayout(saveButton, cancelButton, deleteButton);
-        saveButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
-        deleteButton.addThemeVariants(ButtonVariant.LUMO_ERROR);
-        cancelButton.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
-
-        saveButton.addClickListener(event -> validateAndSave());
-        deleteButton.addClickListener(event -> deleteEmployee(currentEmployee));
-        cancelButton.addClickListener(event -> closeEditor());
-
-        VerticalLayout form = new VerticalLayout(formLayout, buttons);
-        form.getStyle().set("background-color", "var(--lumo-contrast-5pct)");
-        form.getStyle().set("border-radius", "var(--lumo-border-radius-m)");
-        form.setPadding(true);
-        return form;
-    }
-
-    private void configureForm() {
-         // Form configuration is largely handled in getForm(), this method can be empty or used for further specific setup if needed.
-    }
-
-    private HorizontalLayout getToolbar() {
-        addEmployeeButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
-        addEmployeeButton.setEnabled(false); // Users cannot add employees
-        addEmployeeButton.setVisible(false); // Hide the button completely for users
-
-        HorizontalLayout toolbar = new HorizontalLayout(addEmployeeButton);
-        toolbar.addClassName("toolbar");
-        return toolbar;
-    }
-
-    private void updateList() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication != null && authentication.isAuthenticated()) {
-            String userEmail = authentication.getName();
-            // Fetch only the employee record associated with the logged-in user's email
-            Optional<com.example.java_mongo_fullstack_app.model.Employee> userEmployee = employeeService.findModelByEmail(userEmail);
-            grid.setItems(userEmployee.map(Collections::singletonList).orElse(Collections.emptyList()));
-        } else {
-            grid.setItems(Collections.emptyList());
+    @Override
+    public void beforeEnter(BeforeEnterEvent event) {
+        if (currentEmployee == null) {
+            loadUserProfile(event);
         }
     }
 
-    public void editEmployee(com.example.java_mongo_fullstack_app.model.Employee employee) {
-        if (employee == null) {
-            closeEditor();
+    private void loadUserProfile(BeforeEnterEvent event) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated() || "anonymousUser".equals(authentication.getName())) {
+            logger.warn("Unauthenticated access attempt to UserDashboardView.");
+            event.forwardTo("login");
             return;
         }
-        currentEmployee = employee;
-        binder.readBean(employee);
-        setVisible(true);
-        addClassName("editing");
+        
+        String userEmail = authentication.getName();
+        logger.info("Attempting to load Employee profile for authenticated user: '{}'", userEmail);
+        Optional<Employee> userEmployee = employeeService.findModelByEmail(userEmail);
+        
+        if (userEmployee.isEmpty()) {
+            logger.info("No Employee profile found for: '{}'. Creating a fresh profile in memory.", userEmail);
+            
+            // Create an empty profile for the user to fill out. DO NOT save it to the DB yet!
+            currentEmployee = new Employee();
+            currentEmployee.setEmail(userEmail);
+            currentEmployee.setStatus(EmployeeStatus.ACTIVE);
+        } else {
+            logger.info("Successfully loaded Employee profile for: '{}'", userEmail);
+            currentEmployee = userEmployee.get();
+        }
+        
+        // RESTRICT USER EDITS: Only allow personal data changes. 
+        // Administrative & HR fields are locked and strictly controlled by the Admin.
+        email.setReadOnly(true);
+        department.setReadOnly(true);
+        role.setReadOnly(true);
+        designation.setReadOnly(true);
+        employmentType.setReadOnly(true);
+        dateOfJoining.setReadOnly(true);
+        salary.setReadOnly(true);
+        bonus.setReadOnly(true);
+        currency.setReadOnly(true);
+        managerName.setReadOnly(true);
+        
+        binder.bindInstanceFields(this);
+        binder.setBean(currentEmployee); // Live bind the bean
+
+        buildDashboard();
     }
 
-    private void closeEditor() {
-        currentEmployee = null;
-        binder.readBean(null); // Clear form
-        removeClassName("editing");
+    private void buildDashboard() {
+        VerticalLayout mainContainer = new VerticalLayout();
+        mainContainer.setMaxWidth("800px");
+        mainContainer.setWidthFull();
+        mainContainer.setPadding(true);
+        mainContainer.getStyle().set("padding-top", "40px");
+
+        notes.setWidthFull();
+
+        mainContainer.add(
+            createHeaderCard(), 
+            createSectionCard("Personal Information", firstName, lastName, email, phoneNumber),
+            createSectionCard("Job Details", department, designation, role, employmentType, dateOfJoining, experienceYears),
+            createSectionCard("Compensation", salary, bonus, currency),
+            createSectionCard("Work Details", managerName, workLocation, status),
+            createSectionCard("Additional Notes", notes),
+            createActionCard()
+        );
+        add(mainContainer);
     }
 
-    private void validateAndSave() {
+    private Div createHeaderCard() {
+        Div card = createCard();
+        HorizontalLayout layout = new HorizontalLayout();
+        layout.setAlignItems(FlexComponent.Alignment.CENTER);
+        layout.setWidthFull();
+
+        Avatar avatar = new Avatar(currentEmployee.getFirstName() + " " + currentEmployee.getLastName());
+        avatar.getStyle().set("width", "80px").set("height", "80px").set("font-size", "30px");
+        avatar.setColorIndex(currentEmployee.getFirstName() != null ? currentEmployee.getFirstName().length() % 7 : 0);
+
+        VerticalLayout info = new VerticalLayout();
+        info.setPadding(false);
+        info.setSpacing(false);
+        H2 name = new H2((currentEmployee.getFirstName() != null ? currentEmployee.getFirstName() : "") + " " + (currentEmployee.getLastName() != null ? currentEmployee.getLastName() : ""));
+        name.getStyle().set("margin", "0");
+        Span emailSpan = new Span(currentEmployee.getEmail());
+        emailSpan.addClassNames(LumoUtility.TextColor.SECONDARY);
+        info.add(name, emailSpan);
+
+        Button logoutBtn = new Button("Logout", new Icon(VaadinIcon.SIGN_OUT));
+        logoutBtn.addThemeVariants(ButtonVariant.LUMO_ERROR, ButtonVariant.LUMO_TERTIARY);
+        logoutBtn.addClickListener(e -> {
+            SecurityContextHolder.clearContext();
+            UI.getCurrent().getPage().setLocation("/login");
+        });
+
+        HorizontalLayout rightSide = new HorizontalLayout(logoutBtn);
+        rightSide.setJustifyContentMode(FlexComponent.JustifyContentMode.END);
+        layout.add(avatar, info, rightSide);
+        layout.setFlexGrow(1, rightSide);
+        
+        card.add(layout);
+        return card;
+    }
+
+    private Div createSectionCard(String title, Component... fields) {
+        Div card = createCard();
+        H4 header = new H4(title);
+        header.getStyle().set("margin-top", "0");
+
+        FormLayout form = new FormLayout(fields);
+        form.setResponsiveSteps(new FormLayout.ResponsiveStep("0", 1), new FormLayout.ResponsiveStep("500px", 2));
+
+        // Make text area full width in form
+        for (Component field : fields) {
+            if (field instanceof TextArea) {
+                form.setColspan(field, 2);
+            }
+        }
+
+        card.add(header, form);
+        return card;
+    }
+
+    private Div createActionCard() {
+        Div card = createCard();
+        card.getStyle().set("background", "transparent").set("box-shadow", "none").set("padding-top", "0");
+        
+        HorizontalLayout layout = new HorizontalLayout();
+        layout.setWidthFull();
+        layout.setJustifyContentMode(FlexComponent.JustifyContentMode.END);
+
+        Button updateBtn = new Button("Update Profile", new Icon(VaadinIcon.CHECK));
+        updateBtn.addThemeVariants(ButtonVariant.LUMO_PRIMARY, ButtonVariant.LUMO_LARGE);
+        updateBtn.addClickListener(e -> updateProfile());
+
+        layout.add(updateBtn);
+        card.add(layout);
+        return card;
+    }
+
+    private Div createCard() {
+        Div card = new Div();
+        card.addClassNames(LumoUtility.Background.BASE, LumoUtility.BorderRadius.LARGE, LumoUtility.BoxShadow.SMALL, LumoUtility.Padding.LARGE, LumoUtility.Margin.Bottom.MEDIUM);
+        card.setWidthFull();
+        return card;
+    }
+
+    private void updateProfile() {
         try {
             if (binder.isValid()) {
-                employeeService.saveEmployeeModel(currentEmployee);
-                Notification.show("Employee saved successfully!", 3000, Notification.Position.TOP_CENTER)
+                // Re-assign currentEmployee to capture the MongoDB-generated ID
+                currentEmployee = employeeService.saveEmployeeModel(currentEmployee);
+                Notification.show("Profile updated successfully!", 3000, Notification.Position.TOP_CENTER)
                         .addThemeVariants(NotificationVariant.LUMO_SUCCESS);
-                updateList();
-                closeEditor();
+                logger.info("User '{}' successfully updated their profile.", currentEmployee.getEmail());
+                
+                // Optional: UI.getCurrent().getPage().reload(); if you want the avatar to instantly update
             } else {
                 Notification.show("Please correct the errors in the form.", 3000, Notification.Position.TOP_CENTER)
                         .addThemeVariants(NotificationVariant.LUMO_ERROR);
+                logger.warn("User '{}' attempted to save profile with validation errors.", currentEmployee.getEmail());
             }
         } catch (Exception e) {
-            Notification.show("Error saving employee: " + e.getMessage(), 5000, Notification.Position.TOP_CENTER)
-                    .addThemeVariants(NotificationVariant.LUMO_ERROR);
-        }
-    }
-
-    private void deleteEmployee(com.example.java_mongo_fullstack_app.model.Employee employee) {
-        if (employee == null || employee.getId() == null) {
-            Notification.show("No employee selected for deletion.", 3000, Notification.Position.TOP_CENTER)
-                    .addThemeVariants(NotificationVariant.LUMO_WARNING);
-            return;
-        }
-        try {
-            employeeService.deleteEmployee(employee.getId());
-            Notification.show("Employee deleted successfully!", 3000, Notification.Position.TOP_CENTER)
-                    .addThemeVariants(NotificationVariant.LUMO_SUCCESS);
-            updateList();
-            closeEditor();
-        } catch (Exception e) {
-            Notification.show("Error deleting employee: " + e.getMessage(), 5000, Notification.Position.TOP_CENTER)
+            logger.error("Error saving profile for user '{}': {}", currentEmployee.getEmail(), e.getMessage(), e);
+            Notification.show("Error saving profile: " + e.getMessage(), 5000, Notification.Position.TOP_CENTER)
                     .addThemeVariants(NotificationVariant.LUMO_ERROR);
         }
     }

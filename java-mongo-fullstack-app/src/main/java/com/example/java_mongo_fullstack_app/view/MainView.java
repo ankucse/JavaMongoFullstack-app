@@ -107,7 +107,14 @@ public class MainView extends VerticalLayout {
         Span welcomeText = new Span("Welcome, Admin");
         welcomeText.addClassNames(LumoUtility.TextColor.SECONDARY, LumoUtility.FontWeight.MEDIUM);
 
-        HorizontalLayout profileArea = new HorizontalLayout(welcomeText, avatar);
+        Button logoutBtn = new Button(new Icon(VaadinIcon.SIGN_OUT));
+        logoutBtn.addThemeVariants(ButtonVariant.LUMO_TERTIARY, ButtonVariant.LUMO_ERROR);
+        logoutBtn.addClickListener(e -> {
+            org.springframework.security.core.context.SecurityContextHolder.clearContext();
+            com.vaadin.flow.component.UI.getCurrent().getPage().setLocation("/login");
+        });
+
+        HorizontalLayout profileArea = new HorizontalLayout(welcomeText, avatar, logoutBtn);
         profileArea.setAlignItems(Alignment.CENTER);
         profileArea.setSpacing(true);
 

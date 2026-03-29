@@ -117,14 +117,14 @@ public class LoginView extends VerticalLayout implements BeforeEnterObserver {
         registerLink.getStyle().set("font-size", "var(--lumo-font-size-s)");
         registerLink.getStyle().set("color", "var(--lumo-primary-text-color)");
         registerLink.getStyle().set("text-decoration", "none");
-        registerLink.setEnabled(false); // Placeholder, not implemented
 
         card.add(title, emailField, passwordField, loginButton, googleLoginButton, githubLoginButton, forgotPasswordLink, registerLink);
         return card;
     }
 
     private void authenticateUser() {
-        String email = emailField.getValue();
+        // Normalize email to match registration logic exactly
+        String email = emailField.getValue().trim().toLowerCase();
         logger.info("Initiating authentication attempt for email: '{}'", email);
         
         try {
