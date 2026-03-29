@@ -19,8 +19,10 @@ configurations {
 }
 
 repositories {
-	mavenCentral()
+	mavenCentral() // Ensure mavenCentral is listed first
 	maven { setUrl("https://maven.vaadin.com/vaadin-prereleases") }
+	maven { url 'https://maven.vaadin.com/vaadin-core-releases' }
+	maven { url 'https://maven.vaadin.com/vaadin-addons' }
 }
 
 ext {
@@ -32,7 +34,12 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-validation'
 	implementation 'org.springframework.boot:spring-boot-starter-web'
 	implementation 'org.springframework.boot:spring-boot-starter-webflux'
+	implementation 'org.springframework.boot:spring-boot-starter-security'
+
+	// Declare Vaadin dependencies without explicit versions.
+	// The 'com.vaadin' plugin will manage their versions via its internal BOM.
 	implementation 'com.vaadin:vaadin-spring-boot-starter'
+
 	compileOnly 'org.projectlombok:lombok'
 	annotationProcessor 'org.projectlombok:lombok'
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'

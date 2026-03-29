@@ -21,10 +21,12 @@ import com.vaadin.flow.data.binder.Binder;
 import com.vaadin.flow.router.BeforeEvent;
 import com.vaadin.flow.router.HasUrlParameter;
 import com.vaadin.flow.router.Route;
+import jakarta.annotation.security.RolesAllowed;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
 @Route("edit")
+@RolesAllowed("ADMIN")
 public class EditEmployeeView extends VerticalLayout implements HasUrlParameter<String> {
 
     private final RestTemplate restTemplate;
