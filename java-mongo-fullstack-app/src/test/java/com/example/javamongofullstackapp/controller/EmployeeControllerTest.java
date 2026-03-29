@@ -1,4 +1,4 @@
-package com.example.java_mongo_fullstack_app.controller;
+package com.example.javamongofullstackapp.controller;
 
 import com.example.java_mongo_fullstack_app.controller.EmployeeController;
 import com.example.java_mongo_fullstack_app.dto.EmployeeDto;
@@ -10,9 +10,11 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ContextConfiguration;
+import com.example.java_mongo_fullstack_app.JavaMongoFullstackAppApplication;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.LocalDate;
@@ -27,7 +29,9 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(EmployeeController.class)
-public class EmployeeControllerTest {
+@AutoConfigureMockMvc(addFilters = false)
+@ContextConfiguration(classes = JavaMongoFullstackAppApplication.class)
+class EmployeeControllerTest {
 
     @Autowired
     private MockMvc mockMvc;
@@ -61,8 +65,8 @@ public class EmployeeControllerTest {
         when(employeeService.createEmployee(any(EmployeeDto.class))).thenReturn(employeeDto);
 
         mockMvc.perform(post("/employees")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(employeeDto)))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(employeeDto)))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.firstName").value("John"))
                 .andExpect(jsonPath("$.email").value("john.doe@example.com"));
@@ -107,8 +111,8 @@ public class EmployeeControllerTest {
         when(employeeService.updateEmployee(anyString(), any(EmployeeDto.class))).thenReturn(updatedDto);
 
         mockMvc.perform(put("/employees/1")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(updatedDto)))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(updatedDto)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.firstName").value("Jane"))
                 .andExpect(jsonPath("$.department").value("HR"));
