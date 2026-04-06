@@ -5,6 +5,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+import org.springframework.security.config.annotation.web.builders.WebSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
@@ -52,5 +53,12 @@ public class SecurityConfig extends VaadinWebSecurity {
         setLoginView(http, LoginView.class);
         
         http.formLogin(form -> form.successHandler(roleBasedSuccessHandler));
+    }
+
+    @Override
+    protected void configure(WebSecurity web) throws Exception {
+        super.configure(web);
+        // Completely bypass Spring Security and Vaadin for API load testing
+        web.ignoring().requestMatchers("/employees/**");
     }
 }
